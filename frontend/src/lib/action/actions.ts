@@ -71,20 +71,40 @@ export function performSave(action: string) {
     if (!actionElement || !actionElement.classList.contains("enabled")) return;
 
     const textarea = document.querySelector("textarea");
-    if (!textarea) return;
+    if (!textarea) {
+        notifications.post({
+            title: "Save failed",
+            message: "The textarea element was not found.",
+            type: notifications.NotificationType.Error
+        });
+
+        return;
+    }
 
     const content = textarea.value;
-    if (!content || content.length === 0) return;
+    if (!content || content.length === 0) {
+        notifications.post({
+            title: "Failed to save",
+            message: "The document content is empty.",
+            type: notifications.NotificationType.Error
+        });
+
+        return;
+    }
 
     // @ts-ignore
     const highlighted = hljs.highlightAuto(content);
-    if (!highlighted) return;
-
-    const language = highlighted.language;
-    if (!language) return;
-
+    const language = highlighted?.language;
     const extension = utils.getExtensionFromLanguage(language) || language;
-    if (!extension) return;
+    if (!extension) {
+        notifications.post({
+            title: "Failed to save",
+            message: "Failed to detect the document extension.",
+            type: notifications.NotificationType.Error
+        });
+
+        return;
+    }
 
     // make the api request to save the document
     fetch.fetchBackend("new", {
@@ -124,7 +144,6 @@ export function performDuplicate(action: string) {
 
     const content = code.textContent;
     if (!content || content.length === 0) return;
-    console.log(content);
 
     // redirect to the base route with the content as a body parameter
     window.location.href = `/?content=${encodeURIComponent(content)}`;
